@@ -1,8 +1,8 @@
 # Djamp - Framework MVC
-[![Build Status](https://travis-ci.com/dandico23/djamp-slim-mvc.svg?branch=master)](https://travis-ci.com/dandico23/djamp-slim-mvc) [![Maintainability](https://api.codeclimate.com/v1/badges/cc1c399ebf5c4da86fb2/maintainability)](https://codeclimate.com/github/dandico23/djamp-slim-mvc/maintainability)
-<a href="https://packagist.org/packages/djamp/slim-mvc"><img src="https://poser.pugx.org/djamp/slim-mvc/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/djamp/slim-mvc"><img src="https://poser.pugx.org/djamp/slim-mvc/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/djamp/slim-mvc"><img src="https://poser.pugx.org/djamp/slim-mvc/license.svg" alt="License"></a>
+[![Build Status](https://travis-ci.com/dandico23/DjampMVC.svg?branch=master)](https://travis-ci.com/dandico23/DjampMVC) [![Maintainability](https://api.codeclimate.com/v1/badges/cc1c399ebf5c4da86fb2/maintainability)](https://codeclimate.com/github/dandico23/djamp-slim-mvc/maintainability)
+<a href="https://packagist.org/packages/djamp/djamp"><img src="https://poser.pugx.org/djamp/djamp/d/total.svg" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/djamp/djamp"><img src="https://poser.pugx.org/djamp/djamp/v/stable.svg" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/djamp/djamp"><img src="https://poser.pugx.org/djamp/djamp/license.svg" alt="License"></a>
 
 Framework MVC desenhado para aplicações que tenham multiplas fontes de dados(databases, APis) e multiplos ambientes(produção, desenvolvimento, homologação, treinamento). utiliza Twig como engine de templates, Flash para mensagens entre requisições.
 
@@ -21,7 +21,7 @@ Framework MVC desenhado para aplicações que tenham multiplas fontes de dados(d
 ### Instalação Rápida
 
 ```
-composer create-project djamp/slim-mvc
+composer create-project djamp/djamp
 ```
 ### Criando classes automaticamente
 
