@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit colors="true">
+    <testsuites>
+        <testsuite name="UnitTestSuite">
+            <directory suffix=".php">tests</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">App/controllers/</directory>
+            <directory suffix=".php">App/models/</directory>
+            <directory suffix=".php">App/routes/</directory>
+            <directory suffix=".php">./lib</directory>
+            <exclude>
+                <directory suffix=".php">vendor/</directory>
+                <directory suffix=".php">tests/</directory>
+            </exclude>
+        </whitelist>
+    </filter>
+</phpunit>

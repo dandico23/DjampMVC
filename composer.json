@@ -1,0 +1,46 @@
+{
+    "name": "djamp/djamp",
+    "description": "framework MVC baseado no SlimFramework",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Moisés Dandico",
+            "email": "moises.dandico@gmail.com"
+        },
+        {
+            "name": "Pedro Henrique"
+        },
+        {
+            "name": "João Vitor Lima"
+        },
+        {
+            "name": "Arthur Lenzi"
+        },
+        {
+            "name": "Daniel Pereira",
+            "email": "dani.pereira47@gmail.com"
+        }
+    ],
+    "require": {
+        "slim/slim": "3.*",
+        "slim/twig-view": "2.5.1",
+        "slim/flash": "^0.4.0",
+        "twbs/bootstrap": "4.4.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Controller\\": "App\\controllers",
+            "models\\": "App\\models",
+            "lib\\": "lib"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Test\\":"tests/"
+        }
+    },
+    "license": "MIT"
+}

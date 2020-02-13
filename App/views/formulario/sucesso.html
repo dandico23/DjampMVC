@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{{name}}
+{% endblock %}
+
+{% block body %}
+<div class="row text-center justify-content-center">
+    <div class="col-sm-6 col-sm-offset-3">
+    <br><br> <h2 style="color:#0fad00">Successo</h2>
+    <h3>Você enviou o formulario com sucesso</h3>
+    <p style="font-size:20px;color:#5C5C5C;">Obrigado por preenchero  formulario. Os dados que recebemos foram:</p>
+        <span>email: {{email}}</span><br>
+        <span>password:{{password}}</span><br>
+        <span>address1: {{address1}}</span><br>
+        <span>address2: {{address2}}</span><br>
+        <span>city: {{city}}</span><br>
+        <span>state: {{state}}</span><br>
+        <span>zip: {{zip}}</span><br>
+    <a href="calamidade" class="btn btn-success">Novo Formulário</a>
+<br><br>
+    </div>
+    
+</div>
+{%endblock%}
