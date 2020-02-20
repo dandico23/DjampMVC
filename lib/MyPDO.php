@@ -179,13 +179,9 @@ class MyPDO extends \PDO
      * @param  mixed $fetch_argument - column index, class name, or other argument depending on the value of the $fetch_style parameter
      * @return array - array of results or false on failure
      */
-
-    
-
     public function select($sql, $bindings = array(), $fetch_style = '', $fetch_argument = '')
     {
         $table = PDOHelper::getTableFromQuery($sql);
-        $to_return = false;
 
         // prepare the statement
         if ($this->customPrepare($sql, $table)) {
@@ -197,11 +193,84 @@ class MyPDO extends \PDO
                 if (!empty($fetch_argument)) {
                     return $this->statement->fetchAll($fetch_style, $fetch_argument);
                 }
-                $to_return = $this->statement->fetchAll($fetch_style);
+                return $this->statement->fetchAll($fetch_style);
             }
-            return $to_return;
         }
-        return $to_return;
+        return false;
+    }
+
+    /**
+     * Return the total number of pages given the number of elements per page
+     *
+     * @param string $table - table name
+     * @param  array $limit - number of elements per page
+     * @param  array $where - where clause as an array of conditions (must be an array)
+     * @return mixed - the total number of pages
+     */
+    public function paginateGetTotalPages($table, $limit, $where)
+    {
+        $query = "SELECT count(*) FROM $table";
+        if (!empty($where)) {
+            $query .= " WHERE ";
+            $buildResult = $this->buildSQL($query, $table, $where);
+            $query = $buildResult[0];
+            $final_bindings = $buildResult[1];
+        }
+
+        if ($this->customPrepare($query, $table)) {
+            if ($this->execute($final_bindings)) {
+                $total_results = $this->statement->fetchColumn();
+                $total_pages = ceil($total_results / $limit);
+                $first_page = $this->selectPaginate($table, 1, $limit, $where);
+                return array('total_pages' => $total_pages, 'first_page' => $first_page);
+            }
+        }
+        return false;
+    }
+
+    public function buildSQL($sql, $table, $values, $bindings = array())
+    {
+        // filter values for table
+        $values = $this->filter($values, $table);
+        $markersResult = PDOHelper::addMarkers($sql, $values, $bindings);
+        return $markersResult;
+    }
+
+    /**
+     * Return the page given the number of elements per page
+     *
+     * @param string $table - table name
+     * @param  array $page - number of the desired page
+     * @param  array $limit - number of elements per page
+     * @param  array $where - where clause as an array of conditions (must be an array)
+     * @return mixed - the elements of the requested page
+     */
+    public function selectPaginate($table, $page, $limit, $where)
+    {
+        $paginate_sql  = "SELECT * FROM $table";
+        if (!empty($where)) {
+            $paginate_sql .= " WHERE ";
+            $buildResult = $this->buildSQL($paginate_sql, $table, $where);
+            $paginate_sql = $buildResult[0];
+            $final_bindings = $buildResult[1];
+        }
+
+        if (!$this->scheme) {
+            # For mysql
+            $paginate_sql .=  " LIMIT :start,:limit";
+        } else {
+            # For postgres
+            $paginate_sql .=  " LIMIT :limit offset :start";
+        }
+
+        $final_bindings[':limit'] = $limit;
+        $final_bindings[':start'] = ($page - 1) * $limit;
+        if ($this->customPrepare($paginate_sql, $table)) {
+            if ($this->execute($final_bindings)) {
+                return $this->statement->fetchAll(\PDO::FETCH_ASSOC);
+            }
+        }
+        return false;
     }
 
     /**
@@ -233,7 +302,8 @@ class MyPDO extends \PDO
      * @return mixed - the value or false on failure
      */
 
-    public function sqlReturning($table) {
+    public function sqlReturning($table)
+    {
         $last_id = parent::lastInsertId();
         $this->statement = parent::prepare("SELECT * FROM $table where Id=($last_id)");
         $this->execute(array());
@@ -381,31 +451,32 @@ class MyPDO extends \PDO
      * @return int - number of affected rows or false on failure
      */
 
+    public function handleWhereClause($sql, $where, $final_bindings)
+    {
+        // convert where string to array
+        $where = PDOHelper::convertWhereToArray($where);
+        $updateWhereResult = PDOHelper::mountUpdateWhere($where, $final_bindings);
+        $where = $updateWhereResult[0];
+        $final_bindings = $updateWhereResult[1];
+        // add the where clause
+        foreach ($where as $i => $condition) {
+            $sql .= ($i == 0) ? ' WHERE ' . $condition : ' AND ' . $condition;
+        }
+        return $sql;
+    }
+
     public function update($table, $values, $where, $bindings = array())
     {
-        // filter values for table
-        $values = $this->filter($values, $table);
-
         // Build the SQL:
         $update_sql = 'UPDATE ' . $table . ' SET ';
-        $markersResult = PDOHelper::addMarkers($update_sql, $values, $bindings);
-        $update_sql = $markersResult[0];
-        $final_bindings = $markersResult[1];
+
+        $buildResult = $this->buildSQL($update_sql, $table, $values, $bindings);
+        $update_sql = $buildResult[0];
+        $final_bindings = $buildResult[1];
 
         // handle the where clause and bindings
         if (!empty($where)) {
-            // convert where string to array
-            if (!is_array($where)) {
-                $where = preg_split('/\b(where|and)\b/i', $where, null, PREG_SPLIT_NO_EMPTY);
-                $where = array_map('trim', $where);
-            }
-            $updateWhereResult = PDOHelper::mountUpdateWhere($where, $final_bindings);
-            $where = $updateWhereResult[0];
-            $final_bindings = $updateWhereResult[1];
-            // add the where clause
-            foreach ($where as $i => $condition) {
-                $update_sql .= ($i == 0) ? ' WHERE ' . $condition : ' AND ' . $condition;
-            }
+            $update_sql = $this->handleWhereClause($update_sql, $where, $final_bindings);
         }
         return $this->run($update_sql, $table, $final_bindings);
     }

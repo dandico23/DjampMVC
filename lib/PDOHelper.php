@@ -154,6 +154,15 @@ class PDOHelper extends MyPDO
         return $sql . ') VALUES (';
     }
 
+    public static function convertWhereToArray($where)
+    {
+        if (!is_array($where)) {
+            $where = preg_split('/\b(where|and)\b/i', $where, null, PREG_SPLIT_NO_EMPTY);
+            $where = array_map('trim', $where);
+        }
+        return $where;
+    }
+
     public static function mountUpdateWhere($where, $final_bindings)
     {
         // loop through each condition
