@@ -207,9 +207,10 @@ class MyPDO extends \PDO
      * @param  array $where - where clause as an array of conditions (must be an array)
      * @return mixed - the total number of pages
      */
-    public function paginateGetTotalPages($table, $limit, $where)
+    public function paginateGetTotalPages($table, $limit, $where = array())
     {
         $query = "SELECT count(*) FROM $table";
+        $final_bindings = array();
         if (!empty($where)) {
             $query .= " WHERE ";
             $buildResult = $this->buildSQL($query, $table, $where);
@@ -245,9 +246,10 @@ class MyPDO extends \PDO
      * @param  array $where - where clause as an array of conditions (must be an array)
      * @return mixed - the elements of the requested page
      */
-    public function selectPaginate($table, $page, $limit, $where)
+    public function selectPaginate($table, $page, $limit, $where = array())
     {
         $paginate_sql  = "SELECT * FROM $table";
+        $final_bindings = array();
         if (!empty($where)) {
             $paginate_sql .= " WHERE ";
             $buildResult = $this->buildSQL($paginate_sql, $table, $where);
