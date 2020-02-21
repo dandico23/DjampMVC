@@ -233,6 +233,10 @@ class MyPDO extends \PDO
     {
         // filter values for table
         $values = $this->filter($values, $table);
+        if (!$values) {
+            throw new \PDOException('Where arguments do not exist in the table');
+            return false;
+        }
         $markersResult = PDOHelper::addMarkers($sql, $values, $bindings);
         return $markersResult;
     }
@@ -257,16 +261,17 @@ class MyPDO extends \PDO
             $final_bindings = $buildResult[1];
         }
 
+        $start = ($page - 1) * $limit;
         if (!$this->scheme) {
             # For mysql
-            $paginate_sql .=  " LIMIT :start,:limit";
+            $paginate_sql .=  " LIMIT $start,$limit";
         } else {
             # For postgres
             $paginate_sql .=  " LIMIT :limit offset :start";
+            $final_bindings[':limit'] = $limit;
+            $final_bindings[':start'] = $start;
         }
 
-        $final_bindings[':limit'] = $limit;
-        $final_bindings[':start'] = ($page - 1) * $limit;
         if ($this->customPrepare($paginate_sql, $table)) {
             if ($this->execute($final_bindings)) {
                 return $this->statement->fetchAll(\PDO::FETCH_ASSOC);
