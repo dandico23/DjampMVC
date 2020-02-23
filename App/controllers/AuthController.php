@@ -2,7 +2,7 @@
 
 namespace Controller;
 
-class AuthController extends Controller
+class AuthController extends \Engine\Controller
 {
     //Confere se existe sessão
     //Precisa ser modificada para checar varieveis de sessão, já que é iniciada sessões em outras paginas;

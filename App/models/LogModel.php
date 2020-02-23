@@ -2,7 +2,7 @@
 
 namespace models;
 
-class LogModel extends Model
+class LogModel extends \Engine\Model
 {
 
     public function __construct($state)
