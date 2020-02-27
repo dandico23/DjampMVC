@@ -8,15 +8,17 @@ abstract class Model
 {
     protected $databases;
     protected $prefix;
+    protected $config;
     public $db;
     private $error_message;
 
-    public function __construct($state)
+    public function __construct($state, $config)
     {
         $this->db = new \stdClass();
         $this->states = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'state.ini', true);
         $this->databases = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'database.ini', true);
         $this->prefix = $state;
+        $this->config = $config;
     }
 
     public function setValor($dados, $key)
@@ -44,7 +46,6 @@ abstract class Model
             }
             return $date->format('Y-m-d');
         } catch (\ErrorException $e) {
-
             throw new \UnexpectedValueException($this->error_message);
         }
         
@@ -60,8 +61,8 @@ abstract class Model
         return $this->dateValidator($dados[$key], false);
     }
 
-    public function setTimeStamp($dados, $key) {
-
+    public function setTimeStamp($dados, $key)
+    {
         $this->error_message = 'Formato de data inválido';
         if (!isset($dados[$key]) || !is_int($dados[$key])) {
             throw new \UnexpectedValueException($this->error_message);
@@ -83,10 +84,6 @@ abstract class Model
         $user = $db_data['user'];
         $pass = $db_data['password'];
 
-        if (isset($db_data['scheme'])) {
-            return new PDOHelper($dsn, $user, $pass, $env_state, $db_data['scheme'], []);
-        } else {
-            return new PDOHelper($dsn, $user, $pass, $env_state, null, []);
-        }
+        return new PDOHelper($dsn, $user, $pass, $env_state, $db_data['type'], $this->config, []);
     }
 }

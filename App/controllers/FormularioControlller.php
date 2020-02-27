@@ -5,7 +5,6 @@ namespace Controller;
 class FormularioController extends \Engine\Controller
 {
 
-
     public function showFormulario($request, $response, $args)
     {
         //instancia uma model
@@ -21,5 +20,4 @@ class FormularioController extends \Engine\Controller
         $Atividades = $atividadesModel->getAtividades();
         return $this->view->render($response, 'formulario/sucesso.html', $dadosForm);
     }
-
 }

@@ -12,6 +12,7 @@ abstract class Controller
     protected $view;
     protected $flash;
     protected $state;
+    protected $config;
 
     public function __construct(ContainerInterface $container)
     {
@@ -42,11 +43,13 @@ abstract class Controller
         $this->flash = $this->container->get('flash');
 
         $this->state = $this->container->get('state');
+
+        $this->config = $this->container->get('config');
     }
 
     public function loadModel($model)
     {
         $class = '\\models\\' . $model . 'Model';
-        return new $class($this->state);
+        return new $class($this->state, $this->config);
     }
 }

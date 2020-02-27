@@ -44,9 +44,10 @@ class MyPDO extends \PDO
     protected $bindings;
 
     # Added to provide support for postgres
-    protected $scheme;
+    protected $is_postgres;
 
     protected $env_state;
+    protected $config;
 
 
     /**
@@ -57,14 +58,16 @@ class MyPDO extends \PDO
      * @param string $password - database password
      * @param array $options - associative array of connection options
      */
-    public function __construct($dsn, $user, $password, $env_state, $scheme = null, $options = array())
+    public function __construct($dsn, $user, $password, $env_state, $type, $config, $options = array())
     {
         // set server environment constants
         $this->env_state = $env_state;
+        $this->config = $config;
         
-        # If it's a postgres db, add the scheme
-        if ($scheme && preg_match('/\bpgsql\b/', $dsn)) {
-            $this->scheme = $scheme;
+        # If it's a postgres db, some functions use different queries
+        $this->is_postgres = false;
+        if (preg_match('/\bpgsql\b/', $dsn)) {
+            $this->is_postgres = true;
         }
 
         // set default options
@@ -102,7 +105,7 @@ class MyPDO extends \PDO
         $error['Message'] = $e->getMessage();
         // follow backtrace to the top where the error was first raised
         $backtrace = debug_backtrace();
-        foreach ($backtrace as $info) { 
+        foreach ($backtrace as $info) {
             if (isset($info['file']) && $info['file'] != __FILE__) {
                 $error['Backtrace'] = $info['file'] . ' @ line ' . $info['line'];
             }
@@ -129,10 +132,6 @@ class MyPDO extends \PDO
     {
         // cleanup
         $this->sql = trim($sql);
-        
-        if ($this->scheme) {
-            $this->sql = preg_replace('/\b' . $table . '\b/', $this->scheme . "." . $table, $sql);
-        }
 
         try {
             // prepare the statement
@@ -222,8 +221,14 @@ class MyPDO extends \PDO
             if ($this->execute($final_bindings)) {
                 $total_results = $this->statement->fetchColumn();
                 $total_pages = ceil($total_results / $limit);
-                $first_page = $this->selectPaginate($table, 1, $limit, $where);
-                return array('total_pages' => $total_pages, 'first_page' => $first_page);
+                
+                $paginateCode = PDOHelper::generatePaginateCode($table, $limit, $where);
+                $encryptedResult = PDOHelper::encryptSSL($paginateCode, $this->config["cipher_type"], $this->config["cipher_key"]);
+                list($cipher_text, $iv) = array($encryptedResult["cipher_text"],$encryptedResult["iv"]);
+                $first_page = $this->selectPaginate($cipher_text, $iv, 1);
+
+                return array('total_pages' => $total_pages, 'first_page' => $first_page,
+                            "cipher_text" => $cipher_text, "iv" => $iv);
             }
         }
         return false;
@@ -232,8 +237,8 @@ class MyPDO extends \PDO
     public function buildSQL($sql, $table, $values, $bindings = array())
     {
         // filter values for table
-        $values = $this->filter($values, $table);
-        if (!$values) {
+        $filtered_values = $this->filter($values, $table);
+        if ($values && !$filtered_values) {
             throw new \PDOException('Where arguments do not exist in the table');
             return false;
         }
@@ -250,19 +255,22 @@ class MyPDO extends \PDO
      * @param  array $where - where clause as an array of conditions (must be an array)
      * @return mixed - the elements of the requested page
      */
-    public function selectPaginate($table, $page, $limit, $where = array())
+    public function selectPaginate($cipherText, $iv, $page)
     {
+        $decryptedCode = PDOHelper::decryptSSL($cipherText, $this->config["cipher_type"], $this->config["cipher_key"], $iv);
+        $paginateInfo = PDOHelper::recoverPaginateInfoFromCode($decryptedCode);
+        list($table, $limit, $where) = $paginateInfo;
+
         $paginate_sql  = "SELECT * FROM $table";
         $final_bindings = array();
         if (!empty($where)) {
             $paginate_sql .= " WHERE ";
             $buildResult = $this->buildSQL($paginate_sql, $table, $where);
-            $paginate_sql = $buildResult[0];
-            $final_bindings = $buildResult[1];
+            list($paginate_sql, $final_bindings) = $buildResult;
         }
 
         $start = ($page - 1) * $limit;
-        if (!$this->scheme) {
+        if (!$this->is_postgres) {
             # For mysql
             $paginate_sql .=  " LIMIT $start,$limit";
         } else {
@@ -324,7 +332,7 @@ class MyPDO extends \PDO
         if ($success = $this->execute($bindings)) {
             // return the result
             if (preg_match('/(insert)/i', $this->sql)) {
-                if ($this->scheme) {
+                if ($this->is_postgres) {
                     $to_return = $this->statement->fetchAll();  # Functions can be seen in class PDOStatement
                 } else {
                     # MySQL does not have RETURNING clause
@@ -379,7 +387,7 @@ class MyPDO extends \PDO
     {
         // get columns in the table
         try {
-            if ($this->scheme) {
+            if ($this->is_postgres) {
                 $this->sql = "SELECT column_name,data_type,identity_increment 
                               FROM information_schema.columns WHERE table_name = '$table'";
             } else {
@@ -392,9 +400,9 @@ class MyPDO extends \PDO
             return false;
         }
 
-        $columns = PDOHelper::compileColumnNames($info, $this->scheme);
+        $columns = PDOHelper::compileColumnNames($info, $this->is_postgres);
         $values = PDOHelper::removeItems($columns, $values);
-        return PDOHelper::removeAiFields($info, $values, $this->scheme);
+        return PDOHelper::removeAiFields($info, $values, $this->is_postgres);
     }
 
     /**
@@ -434,7 +442,7 @@ class MyPDO extends \PDO
         }
         $insert_sql .= ')';
 
-        if ($this->scheme) {
+        if ($this->is_postgres) {
             $insert_sql .= " RETURNING *";
         }
 
