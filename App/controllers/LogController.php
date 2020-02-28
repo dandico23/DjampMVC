@@ -2,7 +2,7 @@
 
 namespace Controller;
 
-class LogController extends Controller
+class LogController extends \Engine\Controller
 {
     public function getLog($request, $response, $next)
     {

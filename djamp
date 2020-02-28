@@ -9,7 +9,7 @@ if ($operacao == "create:Controller") {
      $msg .= '' . PHP_EOL;
      $msg .= 'namespace Controller;' . PHP_EOL;
      $msg.='' . PHP_EOL;
-     $msg .= 'class ' . $nomeArquivo . ' extends Controller' . PHP_EOL;
+     $msg .= 'class ' . $nomeArquivo . ' extends \Engine\Controller' . PHP_EOL;
      $msg .= '{'. PHP_EOL;
      $msg.='' . PHP_EOL;
      $msg.='}'. PHP_EOL;
@@ -23,7 +23,7 @@ if ($operacao == "create:Controller") {
      $msg .= '' . PHP_EOL;
      $msg .= 'namespace models;' . PHP_EOL;
      $msg.='' . PHP_EOL;
-     $msg .= 'class ' . $nomeArquivo . ' extends Model' . PHP_EOL;
+     $msg .= 'class ' . $nomeArquivo . ' extends \Engine\Model' . PHP_EOL;
      $msg .= '{'. PHP_EOL;
      $msg .='' . PHP_EOL;
      $msg .='    public function __construct($state)' .PHP_EOL;

@@ -34,7 +34,8 @@
         "psr-4": {
             "Controller\\": "App\\controllers",
             "models\\": "App\\models",
-            "lib\\": "lib"
+            "lib\\": "lib",
+            "Engine\\": "engine"
         }
     },
     "autoload-dev": {
