@@ -9,6 +9,7 @@ abstract class Model
     protected $databases;
     protected $prefix;
     protected $config;
+    protected $env_state;
     public $db;
     private $error_message;
 
@@ -16,9 +17,29 @@ abstract class Model
     {
         $this->db = new \stdClass();
         $this->states = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'state.ini', true);
-        $this->databases = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'database.ini', true);
+        $this->databases = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config'
+                                               . DIRECTORY_SEPARATOR . 'database.ini', true);
         $this->prefix = $state;
         $this->config = $config;
+
+        $this->env_state = array_search($this->prefix, $this->states);
+        if (!$this->env_state) {
+            $this->env_state = $this->prefix; # Expected to be default
+        }
+    }
+
+    public function getServerApi()
+    {
+        $availableApis = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'api.ini', true);
+        $apiInfo = $availableApis[$this->env_state];
+        $api = $apiInfo['host'];
+        if ($apiInfo['port']) {
+            $api .= ':' . $apiInfo['port'];
+        }
+        $to_return = array('api' => $api, 'token' => $apiInfo['token']);
+        $to_return['Content-Type'] = $apiInfo['Content-Type'];
+        $to_return['Cache-Control'] = $apiInfo['Cache-Control'];
+        return $to_return;
     }
 
     public function setValor($dados, $key)
@@ -73,17 +94,13 @@ abstract class Model
 
     public function openConnect($database)
     {
-        $env_state = array_search($this->prefix, $this->states);
-        if (!$env_state) {
-            $env_state = $this->prefix; # Expected to be default
-        }
-        $db_data = $this->databases[$env_state . '_' . $database];
+        $db_data = $this->databases[$this->env_state . '_' . $database];
 
         $dsn = $db_data['type'] . ':host=' . $db_data['host'] . ';port=' . $db_data['port'];
         $dsn .= ';dbname=' . $db_data['dbname'];
         $user = $db_data['user'];
         $pass = $db_data['password'];
 
-        return new PDOHelper($dsn, $user, $pass, $env_state, $db_data['type'], $this->config, []);
+        return new PDOHelper($dsn, $user, $pass, $this->env_state, $db_data['type'], $this->config, []);
     }
 }

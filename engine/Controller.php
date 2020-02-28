@@ -38,13 +38,37 @@ abstract class Controller
 
         $this->container = $container;
 
+        $this->container[$config_str] = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config'
+                                                        . DIRECTORY_SEPARATOR . 'config.ini');
+        $this->setEnvironment();
+
         $this->view = $this->container->get('view');
-
         $this->flash = $this->container->get('flash');
-
         $this->state = $this->container->get('state');
-
         $this->config = $this->container->get('config');
+    }
+
+    public function setEnvironment()
+    {
+        //Registra contanier com o ambiente atual
+        if (empty($this->container['ambiente'])) {
+            $mapStates = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'state.ini');
+            
+            $request_uri = 'REQUEST_URI';
+            $state_str = 'state';
+            $develop_str = 'develop';
+            $config_str = 'config';
+
+            if (strpos($_SERVER[$request_uri], $mapStates['homolog']) !== false) {
+                $this->container[$state_str] = 'homolog';
+            } elseif (strpos($_SERVER[$request_uri], $mapStates[$develop_str]) !== false) {
+                $this->container[$state_str] = $develop_str;
+            } elseif (strpos($_SERVER[$request_uri], $mapStates['training']) !== false) {
+                $this->container[$state_str] = $develop_str;
+            } else {
+                $this->container[$state_str] = 'default';
+            }
+        }
     }
 
     public function loadModel($model)
