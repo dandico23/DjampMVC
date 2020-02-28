@@ -198,20 +198,20 @@ class PDOHelper extends MyPDO
         return array($where, $final_bindings);
     }
 
-    public static function getIdValues($scheme)
+    public static function getIdValues($is_postgres)
     {
         $id_variable = "extra";
         $column_name = "Field";
-        if ($scheme) {
+        if ($is_postgres) {
             $column_name = "column_name";
             $id_variable = "identity_increment";
         }
         return array($id_variable,$column_name);
     }
 
-    public static function compileColumnNames($info, $scheme)
+    public static function compileColumnNames($info, $is_postgres)
     {
-        $variables_names = PDOHelper::getIdValues($scheme);
+        $variables_names = PDOHelper::getIdValues($is_postgres);
         $column_name = $variables_names[1];
 
         // compile the column names
@@ -233,9 +233,9 @@ class PDOHelper extends MyPDO
         return $values;
     }
 
-    public static function removeAiFields($info, $values, $scheme)
+    public static function removeAiFields($info, $values, $is_postgres)
     {
-        $variables_names = PDOHelper::getIdValues($scheme);
+        $variables_names = PDOHelper::getIdValues($is_postgres);
         $id_variable = $variables_names[0];
         $column_name = $variables_names[1];
 
@@ -252,5 +252,36 @@ class PDOHelper extends MyPDO
             }
         }
         return $values;
+    }
+
+    # Generate a string with paginate parameters, so it can be encrypted
+    public function generatePaginateCode($table, $limit, $where_array)
+    {
+        $comma_separated = implode(",,", $where_array);
+        return $table . "::" . $limit . "::" . $comma_separated;
+    }
+
+    public function recoverPaginateInfoFromCode($code)
+    {
+        $recover = explode("::", $code);
+        $table = $recover[0];
+        $limit = $recover[1];
+        $where_array = array_filter( explode(",,", $recover[2]));
+        return array($table, $limit, $where_array);
+    }
+
+    public function encryptSSL($plaintext, $cipherType, $key)
+    {
+        $ivlen = openssl_cipher_iv_length($cipherType);
+        $iv = openssl_random_pseudo_bytes($ivlen);
+        $ciphertext = openssl_encrypt($plaintext, $cipherType, $key, $options = 0, $iv);
+        return array("cipher_text" => $ciphertext, "iv" => $iv);
+    }
+
+    public function decryptSSL($cipherText, $cipherType, $key, $iv)
+    {
+        //store $cipher, $iv, and $tag for decryption later
+        $original_plaintext = openssl_decrypt($cipherText, $cipherType, $key, $options = 0, $iv);
+        return $original_plaintext;
     }
 }
