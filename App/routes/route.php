@@ -1,6 +1,6 @@
 <?php
 
-use \Engine\Controller\{FormularioController,AuthController,LogController};
+use Controller\{FormularioController,AuthController,LogController};
 
 
 $app->group('', function ($app) {
