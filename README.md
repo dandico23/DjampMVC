@@ -1,4 +1,5 @@
 # Djamp - Framework MVC
+[![Build Status](https://travis-ci.com/dandico23/DjampMVC.svg?branch=master)](https://travis-ci.com/dandico23/DjampMVC) 
 [![Maintainability](https://api.codeclimate.com/v1/badges/fa8099df38d5d3f4b5f1/maintainability)](https://codeclimate.com/github/dandico23/DjampMVC/maintainability)
 <a href="https://packagist.org/packages/djamp/djamp"><img src="https://poser.pugx.org/djamp/djamp/d/total.svg" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/djamp/djamp"><img src="https://poser.pugx.org/djamp/djamp/v/stable.svg" alt="Latest Stable Version"></a>
