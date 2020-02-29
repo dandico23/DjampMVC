@@ -37,9 +37,10 @@ abstract class Controller
         }
 
         $this->container = $container;
+        if (empty($container['config'])) {
+            $this->container['config'] = parse_ini_file(".." . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . "config.ini");
+        }
 
-        $this->container[$config_str] = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config'
-                                                        . DIRECTORY_SEPARATOR . 'config.ini');
         $this->setEnvironment();
 
         $this->view = $this->container->get('view');
@@ -51,7 +52,7 @@ abstract class Controller
     public function setEnvironment()
     {
         //Registra contanier com o ambiente atual
-        if (empty($this->container['ambiente'])) {
+        if (empty($this->container['state'])) {
             $mapStates = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'state.ini');
             
             $request_uri = 'REQUEST_URI';
@@ -64,7 +65,7 @@ abstract class Controller
             } elseif (strpos($_SERVER[$request_uri], $mapStates[$develop_str]) !== false) {
                 $this->container[$state_str] = $develop_str;
             } elseif (strpos($_SERVER[$request_uri], $mapStates['training']) !== false) {
-                $this->container[$state_str] = $develop_str;
+                $this->container[$state_str] = 'training';
             } else {
                 $this->container[$state_str] = 'default';
             }
