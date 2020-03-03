@@ -42,6 +42,42 @@ abstract class Model
         return $to_return;
     }
 
+    public function curlGET($url, $parameters)
+    {
+        # Add get parameters to the url
+        $parameters_str = http_build_query($parameters);
+        if ($parameters_str) {
+            $url .= "?" . $parameters_str;
+        }
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $output = curl_exec($ch);
+        curl_close($ch);
+
+        return json_decode($output, true);
+    }
+
+    /**
+     * Retorna somente os elementos permitidos em uma lista
+     *
+     * @param array $my_array - lista a ser filtrada
+     * @param  array $allowed - chaves permitidas
+     * @return array - lista filtrada
+     */
+    public function filterAllowedArrayKeys($my_array, $allowed)
+    {
+        $filtered = array_filter(
+            $my_array,
+            function ($key) use ($allowed) {
+                return in_array($key, $allowed);
+            },
+            ARRAY_FILTER_USE_KEY
+        );
+        return $filtered;
+    }
+
     public function setValor($dados, $key)
     {
         return (isset($dados[$key]) && $dados[$key]) ? $dados[$key] : null;
