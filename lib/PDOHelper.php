@@ -266,7 +266,7 @@ class PDOHelper extends MyPDO
         $recover = explode("::", $code);
         $table = $recover[0];
         $limit = $recover[1];
-        $where_array = array_filter( explode(",,", $recover[2]));
+        $where_array = array_filter(explode(",,", $recover[2]));
         return array($table, $limit, $where_array);
     }
 

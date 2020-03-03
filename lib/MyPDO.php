@@ -125,7 +125,8 @@ class MyPDO extends \PDO
      * Extends PDO::prepare to add basic error handling
      *
      * @param  string $sql - SQL statement to prepare
-     * @param  array $options - array of key/value pairs to set attributes for the PDOStatement object (@see PDO::prepare)
+     * @param  array $options - array of key/value pairs to set attributes
+     *               for the PDOStatement object (@see PDO::prepare)
      * @return mixed - PDOStatement object or false on failure
      */
     public function customPrepare($sql, $table, $options = array())
@@ -174,8 +175,10 @@ class MyPDO extends \PDO
      *
      * @param  string $sql - SQL statement
      * @param  array $bindings - array of values to be substituted for the parameter markers
-     * @param  int $fetch_style - PDO::FETCH_* constant that controls the contents of the returned array (@see PDOStatement::fetch())
-     * @param  mixed $fetch_argument - column index, class name, or other argument depending on the value of the $fetch_style parameter
+     * @param  int $fetch_style - PDO::FETCH_* constant that controls
+     *         the contents of the returned array (@see PDOStatement::fetch())
+     * @param  mixed $fetch_argument - column index, class name, or other argument
+     *               depending on the value of the $fetch_style parameter
      * @return array - array of results or false on failure
      */
     public function select($sql, $bindings = array(), $fetch_style = '', $fetch_argument = '')
@@ -223,7 +226,11 @@ class MyPDO extends \PDO
                 $total_pages = ceil($total_results / $limit);
                 
                 $paginateCode = PDOHelper::generatePaginateCode($table, $limit, $where);
-                $encryptedResult = PDOHelper::encryptSSL($paginateCode, $this->config["cipher_type"], $this->config["cipher_key"]);
+                $encryptedResult = PDOHelper::encryptSSL(
+                    $paginateCode,
+                    $this->config["cipher_type"],
+                    $this->config["cipher_key"]
+                );
                 list($cipher_text, $iv) = array($encryptedResult["cipher_text"],$encryptedResult["iv"]);
                 $first_page = $this->selectPaginate($cipher_text, $iv, 1);
 
@@ -240,10 +247,10 @@ class MyPDO extends \PDO
         $filtered_values = $this->filter($values, $table);
         if ($values && !$filtered_values) {
             throw new \PDOException('Where arguments do not exist in the table');
-            return false;
+        } else {
+            $markersResult = PDOHelper::addMarkers($sql, $values, $bindings);
+            return $markersResult;
         }
-        $markersResult = PDOHelper::addMarkers($sql, $values, $bindings);
-        return $markersResult;
     }
 
     /**
@@ -257,7 +264,12 @@ class MyPDO extends \PDO
      */
     public function selectPaginate($cipherText, $iv, $page)
     {
-        $decryptedCode = PDOHelper::decryptSSL($cipherText, $this->config["cipher_type"], $this->config["cipher_key"], $iv);
+        $decryptedCode = PDOHelper::decryptSSL(
+            $cipherText,
+            $this->config["cipher_type"],
+            $this->config["cipher_key"],
+            $iv
+        );
         $paginateInfo = PDOHelper::recoverPaginateInfoFromCode($decryptedCode);
         list($table, $limit, $where) = $paginateInfo;
 
