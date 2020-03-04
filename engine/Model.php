@@ -63,7 +63,7 @@ abstract class Model
      * Retorna somente os elementos permitidos em uma lista
      *
      * @param array $my_array - lista a ser filtrada
-     * @param  array $allowed - chaves permitidas
+     * @param array $allowed - chaves permitidas
      * @return array - lista filtrada
      */
     public function filterAllowedArrayKeys($my_array, $allowed)
@@ -103,17 +103,17 @@ abstract class Model
             }
             return $date->format('Y-m-d');
         } catch (\ErrorException $e) {
-            throw new \UnexpectedValueException($this->error_message);
+            $this->handleError(1, $this->error_message);
         }
         
-        throw new \UnexpectedValueException($this->error_message);
+        $this->handleError(1, $this->error_message);
     }
 
     public function setDate($dados, $key)
     {
         $this->error_message = 'Formato de data inválido';
         if (!isset($dados[$key]) || !is_string($dados[$key])) {
-            throw new \UnexpectedValueException($this->error_message);
+            $this->handleError(1, $this->error_message);
         }
         return $this->dateValidator($dados[$key], false);
     }
@@ -122,10 +122,30 @@ abstract class Model
     {
         $this->error_message = 'Formato de data inválido';
         if (!isset($dados[$key]) || !is_int($dados[$key])) {
-            throw new \UnexpectedValueException($this->error_message);
+            $this->handleError(1, $this->error_message);
         }
 
         return $this->dateValidator($dados[$key], true);
+    }
+
+    /**
+     * Lida com os erros, printando somente caso não esteja em ambiente de produção
+     *
+     * @param integer $error_class - tipo do erro
+     * Valores aceitos:
+     *      1 - UnexpectedValueException
+     * @param string $message - message to be printed
+     * @return
+     */
+    public function handleError($error_class, $message)
+    {
+        if ($this->env_state != 'default') {
+            if ($error_class == 1) {
+                throw new \UnexpectedValueException($message);
+            } else {
+                throw new \Exception($message);
+            }
+        }
     }
 
     public function openConnect($database)
