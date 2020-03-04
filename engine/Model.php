@@ -42,8 +42,21 @@ abstract class Model
         return $to_return;
     }
 
-    public function curlGET($url, $parameters)
+    /**
+     * Executa uma requisição GET
+     *
+     * @param string url
+     * @param array parameters (with keys)
+     * @param array headers (without keys)
+     * @return array [data, response code]
+     */
+    public function curlGET($url, $parameters, $headers = array())
     {
+        if (!$url || !is_string($url) || !preg_match('/^http(s)?:\/\/[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(\/.*)?$/i', $url)) {
+            $this->error_message = "Url inválida";
+            $this->handleError(1, $this->error_message);
+        }
+
         # Add get parameters to the url
         $parameters_str = http_build_query($parameters);
         if ($parameters_str) {
@@ -52,11 +65,41 @@ abstract class Model
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $output = curl_exec($ch);
+        $result = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        return json_decode($output, true);
+        return array("data" => $result, "http_code" => $httpcode);
+    }
+
+    /**
+     * Executa uma requisição GET
+     *
+     * @param string url
+     * @param array data
+     * @param array headers (without keys)
+     * @return array [data, response code]
+     */
+    public function curlPOST($url, $data, $headers = array())
+    {
+        if (!$url || !is_string($url) || !preg_match('/^http(s)?:\/\/[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(\/.*)?$/i', $url)) {
+            $this->error_message = "Url invalida";
+            $this->handleError(1, $this->error_message);
+        }
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return array("data" => $result, "http_code" => $httpcode);
     }
 
     /**
@@ -139,7 +182,7 @@ abstract class Model
      */
     public function handleError($error_class, $message)
     {
-        if ($this->env_state != 'default') {
+        if ($this->env_state == 'default') {
             if ($error_class == 1) {
                 throw new \UnexpectedValueException($message);
             } else {
