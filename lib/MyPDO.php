@@ -228,8 +228,8 @@ class MyPDO extends \PDO
                 $paginateCode = PDOHelper::generatePaginateCode($table, $limit, $where);
                 $encryptedResult = PDOHelper::encryptSSL(
                     $paginateCode,
-                    $this->config["cipher_type"],
-                    $this->config["cipher_key"]
+                    $this->config['ssl_encrypt']['cipher_type'],
+                    $this->config['ssl_encrypt']['cipher_key']
                 );
                 list($cipher_text, $iv) = array($encryptedResult["cipher_text"],$encryptedResult["iv"]);
                 $first_page = $this->selectPaginate($cipher_text, $iv, 1);
