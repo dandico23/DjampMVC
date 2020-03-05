@@ -52,7 +52,11 @@ abstract class Model
      */
     public function curlGET($url, $parameters, $headers = array())
     {
-        if (!$url || !is_string($url) || !preg_match('/^http(s)?:\/\/[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(\/.*)?$/i', $url)) {
+        if (
+            !$url
+            || !is_string($url)
+            || !preg_match('/((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z0-9\&\.\/\?\:@\-_=#])*/', $url)
+        ) {
             $this->error_message = "Url inválida";
             $this->handleError(1, $this->error_message);
         }
@@ -63,13 +67,13 @@ abstract class Model
             $url .= "?" . $parameters_str;
         }
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
+        $curl  = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $result = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($curl);
+        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
 
         return array("data" => $result, "http_code" => $httpcode);
     }
@@ -84,8 +88,12 @@ abstract class Model
      */
     public function curlPOST($url, $data, $headers = array())
     {
-        if (!$url || !is_string($url) || !preg_match('/^http(s)?:\/\/[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(\/.*)?$/i', $url)) {
-            $this->error_message = "Url invalida";
+        if (
+            !$url
+            || !is_string($url)
+            || !preg_match('/((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z0-9\&\.\/\?\:@\-_=#])*/', $url)
+        ) {
+            $this->error_message = "Url inválida";
             $this->handleError(1, $this->error_message);
         }
 
