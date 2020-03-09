@@ -13,7 +13,7 @@ abstract class Controller
     protected $flash;
     protected $state;
     protected $config;
-
+    
     public function __construct(ContainerInterface $container)
     {
         // Registra o componente View no Container
@@ -40,7 +40,7 @@ abstract class Controller
 
         $config_str = 'config';
         $this->container[$config_str] = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config'
-                                                        . DIRECTORY_SEPARATOR . 'config.ini');
+                                                        . DIRECTORY_SEPARATOR . 'config.ini', true);
         $this->setEnvironment();
 
         $this->view = $this->container->get('view');
@@ -74,6 +74,6 @@ abstract class Controller
     public function loadModel($model)
     {
         $class = '\\models\\' . $model . 'Model';
-        return new $class($this->state, $this->config);
+        return new $class($this->state, $this->config, $this->container);
     }
 }

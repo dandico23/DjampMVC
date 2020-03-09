@@ -5,11 +5,9 @@ namespace models;
 class LogModel extends \Engine\Model
 {
 
-    public function __construct($state)
+    public function __construct($state, $config, $container)
     {
-        parent::__construct($state);
-        
-        $this->db->mysql = (object) $this->openConnect("mysql");
+        parent::__construct($state, $config, $container);
     }
 
     public function insertLog($dados)

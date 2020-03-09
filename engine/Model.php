@@ -10,18 +10,18 @@ abstract class Model
     protected $prefix;
     protected $config;
     protected $env_state;
-    public $db;
+    protected $container;
     private $error_message;
 
-    public function __construct($state, $config)
+    public function __construct($state, $config, $container)
     {
-        $this->db = new \stdClass();
         $this->states = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'state.ini', true);
         $this->databases = parse_ini_file('..' . DIRECTORY_SEPARATOR . 'config'
                                                . DIRECTORY_SEPARATOR . 'database.ini', true);
         $this->prefix = $state;
         $this->config = $config;
-
+        $this->container = $container;
+        
         $this->env_state = array_search($this->prefix, $this->states);
         if (!$this->env_state) {
             $this->env_state = $this->prefix; # Expected to be default
@@ -196,6 +196,13 @@ abstract class Model
             } else {
                 throw new \Exception($message);
             }
+        }
+    }
+
+    public function initDatabase($db)
+    {
+        if (!isset($this->container[$db])) {
+            $this->container[$db] = (object) $this->openConnect($db);
         }
     }
 
