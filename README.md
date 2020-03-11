@@ -49,9 +49,13 @@ exemplo.com.br
 Você definiu que os ambientes da aplicação serão os seguintes:
 
 exemplo.com.br - ambiente de produção
+
 exemplo.com.br/desenvolvimento- - ambiente de desenvolvimento
+
 exemplo.com.br/homologacao - ambiente de homologação
+
 exemplo.com.br/treinamento - ambiente de treinamento
+
 
 esse seria o seu arquivo Config/state.ini
 
@@ -181,9 +185,13 @@ de dados mysql local. Para isso, os seguintes passos devem ser realizados:
 Feitos os passos descritos acima, as funções CRUD podem ser utilizadas por meio das seguintes rotas:
 
 /examples/insert
+
 /examples/select
+
 /examples/update
+
 /examples/delete
+
 /examples/paginate
 
 O código desses exemplos pode ser encontrado nos arquivos ExamplesController e ExamplesModel.
