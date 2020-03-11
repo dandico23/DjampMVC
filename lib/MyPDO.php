@@ -207,7 +207,8 @@ class MyPDO extends \PDO
      * @param string $table - table name
      * @param  array $limit - number of elements per page
      * @param  array $where - where clause as an array of conditions (must be an array)
-     * @return mixed - the total number of pages
+     * @return array - list with the total number of pages, the first page,
+     *                  cipher_text and iv (used to paginate following pages)
      */
     public function paginateGetTotalPages($table, $limit, $where = array())
     {
@@ -266,8 +267,8 @@ class MyPDO extends \PDO
     {
         $decryptedCode = PDOHelper::decryptSSL(
             $cipherText,
-            $this->config["cipher_type"],
-            $this->config["cipher_key"],
+            $this->config["ssl_encrypt"]["cipher_type"],
+            $this->config["ssl_encrypt"]["cipher_key"],
             $iv
         );
         $paginateInfo = PDOHelper::recoverPaginateInfoFromCode($decryptedCode);
@@ -321,6 +322,14 @@ class MyPDO extends \PDO
         return false;
     }
 
+    public function getPrimaryKeyColumnName($table)
+    {
+        $get_primary_string = "SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'";
+        $this->statement = parent::prepare($get_primary_string);
+        $this->execute(array());
+        return $this->statement->fetch()['Column_name'];
+    }
+
     /**
      * Run the given SQL statement and return the result
      *
@@ -328,16 +337,16 @@ class MyPDO extends \PDO
      * @param  array $bindings - array of values to be substituted for the parameter markers
      * @return mixed - the value or false on failure
      */
-
     public function sqlReturning($table)
     {
         $last_id = parent::lastInsertId();
-        $this->statement = parent::prepare("SELECT * FROM $table where Id=($last_id)");
+        $primary_column_name = $this->getPrimaryKeyColumnName($table);
+        $this->statement = parent::prepare("SELECT * FROM $table where $primary_column_name=($last_id)");
         $this->execute(array());
         return $this->statement->fetchAll();
     }
 
-    public function bindAndExecute($bindings)
+    public function bindAndExecute($bindings, $table)
     {
         $to_return = false;
         // bind and execute
@@ -369,7 +378,7 @@ class MyPDO extends \PDO
             if (!PDOHelper::preventUnsupported($this->sql)) {
                 return false;
             }
-            return $this->bindAndExecute($bindings);
+            return $this->bindAndExecute($bindings, $table);
         }
         return false;
     }
@@ -492,7 +501,7 @@ class MyPDO extends \PDO
         return $sql;
     }
 
-    public function update($table, $values, $where, $bindings = array())
+    public function update($table, $values, $where = array(), $bindings = array())
     {
         // Build the SQL:
         $update_sql = 'UPDATE ' . $table . ' SET ';
