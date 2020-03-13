@@ -12,6 +12,7 @@ $app->group('', function ($app) {
     $app->get('/examples/update', ExamplesController::class . ':updateMySql');
     $app->get('/examples/delete', ExamplesController::class . ':deleteMySql');
     $app->get('/examples/paginate', ExamplesController::class . ':examplePaginate');
+    $app->get('/examples/validate', ExamplesController::class . ':exampleValidate');
     
 });
 

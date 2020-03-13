@@ -44,7 +44,6 @@ class ExamplesController extends \Engine\Controller
 
     public function examplePaginate($request, $response, $args)
     {
-        $examplesModel = $this->loadModel('Examples');
         # Returns the first page, the total number of pages and the 'cipher_text' and 'iv',
         # which must be used to get the following pages
         $result_array = $examplesModel->paginateFirstPage('test_table', 2);
@@ -56,5 +55,11 @@ class ExamplesController extends \Engine\Controller
         $result_array = $examplesModel->paginateOtherPages($result_array['cipher_text'], $result_array['iv'], 2);
         var_dump("Second page info:");
         var_dump($result_array);
+    }
+
+    public function exampleValidate($request, $response, $args)
+    {
+        $examplesModel = $this->loadModel('Examples');
+        $examplesModel->test();
     }
 }

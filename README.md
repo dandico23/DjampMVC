@@ -175,7 +175,7 @@ Por meio de rotas já definidas, é possível realizar o teste das funções de 
 de dados mysql local. Para isso, os seguintes passos devem ser realizados:
 
 - Instalar um banco mysql local
-- Editar o campo 'default_mysql_teste' no arquivo 'database.ini' para realizar o apontamento correto ao banco local
+- Editar o campo 'default_mysql_test' no arquivo 'database.ini' para realizar o apontamento correto ao banco local
 - Criar uma database chamada 'test_db' (ou criar com qualquer outro nome e alterar em database.ini)
 - Criar uma tabela chamada 'test_table' com uma coluna de chave primária e as seguintes colunas: 'column1', 'column2', 'column3'
 
