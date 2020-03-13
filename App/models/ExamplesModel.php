@@ -61,7 +61,7 @@ class ExamplesModel extends \Engine\Model
             'phone' => 'size:8'
         ];
 
-        $valid_result = $this->validator($data, $rules);
+        $valid_result = $this->validator->validate($data, $rules);
         var_dump($valid_result);
     }
 
