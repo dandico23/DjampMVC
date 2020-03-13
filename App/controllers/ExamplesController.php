@@ -60,6 +60,6 @@ class ExamplesController extends \Engine\Controller
     public function exampleValidate($request, $response, $args)
     {
         $examplesModel = $this->loadModel('Examples');
-        $examplesModel->test();
+        $examplesModel->validateExample();
     }
 }

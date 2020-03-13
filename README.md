@@ -169,6 +169,76 @@ $page = 2;
 $second_page = $this->container["database_name"]->selectPaginate($cipher_text, $iv, $page);
 ```
 
+### Validação
+
+A biblioteca Validator implementa diversas validações que podem ser acessadas da seguinte forma nos models e controllers:
+
+```
+$valid_result = $this->validator->validate($data, $rules);
+```
+
+As variáveis $data e $rules devem ser arrays contendo, respectivamente, os campos a serem validados e as regras de validação.
+Múltiplas regras podem ser passados, se separados por '|'.
+Exemplo:
+
+```
+$data = [
+    'email' => 'daniel@mail.com',
+    'age' => 2,
+    'expire_date' => 'tomorrow',
+    'punctuation' => 10,
+    'color' => 'blue',
+    'phone' => '34358525'
+];
+$rules = [
+    'email' => 'required|email',
+    'age' => 'required|numeric',
+    'expire_date' => 'date|after:now',
+    'punctuation' => 'numeric|between:1,11|different:4,5',
+    'color' => 'string|in:red,green,blue',
+    'phone' => 'size:8'
+];
+```
+
+As seguintes validações estão disponíveis:
+
+- required - field must exist in $data
+- email - field must be in mail format
+- numeric - field must be a number
+- accepted - The field under validation must be yes, on, 1, or true
+- after:date - The field under validation must be a value after a given date.
+          The dates will be passed into the strtotime PHP function
+- after_or_equal:date - Similar to after, but considering equal
+- before:date - Similar to previous 2 arguments
+- alpha - The field under validation must be entirely alphabetic characters.
+- alpha_numeric - The field under validation may have alpha-numeric characters
+- between:min,max - The field under validation must have a size between the given min
+          and max (equal not included). Strings and arrays are evaluated based in size
+- boolean - The field under validation must be able to be cast as a boolean.
+            Accepted input are true, false, 1, 0, "1", and "0".
+- date - The field under validation must be a valid date according to
+         the strtotime PHP function
+- date_equals:date - The field under validation must be equal to the given date
+                    The dates will be passed into the PHP strtotime function.
+- date_format:format - The field under validation must match the given format,
+                       function \DateTime::createFromFormat is used
+- different:field1,field2 - The field under validation must have a different
+                            value than given fields.
+- digits:value - The field under validation must be numeric and must have an exact length of value.
+- digits_between:min,max - The field under validation must have a length between
+                    the given min and max (equal not included).
+- in:foo,bar - The field under validation must be included in the given list of values
+- not_in:foo,bar - The field under validation must not be included in the given list of values
+- integer - The field under validation must be an integer
+- string - The field under validation must be a string
+- max:value -  must be less than or equal a maximum value.
+            Strings and arrays are evaluated based in size
+- min:value -  must be higher than or equal a minimum value.
+            Strings and arrays are evaluated based in size
+- regex:pattern - The field under validation must match the given regular expression.
+- size:value - The field under validation must have a size matching the given value,
+          represented by the number of chars if integer or string and the count function for arrays
+
 ### Exemplos
 
 Por meio de rotas já definidas, é possível realizar o teste das funções de acesso a um banco
@@ -185,6 +255,7 @@ Feitos os passos descritos acima, as funções CRUD podem ser utilizadas por mei
 /examples/select  
 /examples/update  
 /examples/delete  
-/examples/paginate  
+/examples/paginate
+/examples/validate (não necessária a configuração de banco de dados)
 
 O código desses exemplos pode ser encontrado nos arquivos ExamplesController e ExamplesModel.

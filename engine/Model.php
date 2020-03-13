@@ -3,6 +3,7 @@
 namespace Engine;
 
 use lib\PDOHelper;
+use lib\Validator;
 
 abstract class Model
 {
@@ -11,6 +12,7 @@ abstract class Model
     protected $config;
     protected $env_state;
     protected $container;
+    protected $validator;
     private $error_message;
 
     public function __construct($state, $config, $container)
@@ -21,7 +23,8 @@ abstract class Model
         $this->prefix = $state;
         $this->config = $config;
         $this->container = $container;
-        
+        $this->validator = new Validator();
+
         $this->env_state = array_search($this->prefix, $this->states);
         if (!$this->env_state) {
             $this->env_state = $this->prefix; # Expected to be default
@@ -139,25 +142,18 @@ abstract class Model
         return isset($dados[$key]) && $dados[$key] != '' ? $dados[$key] : 'false';
     }
 
-    public function dateValidator($dte, $timestamp)
+    public function returnDate($date)
     {
-        if ($dte == '') {
-            return $dte;
-        }
-
-        $dt = new \DateTime();
-        try {
-            if ($timestamp) {
-                $date->setTimestamp($dte);
-            } else {
-                $date = $dt->createFromFormat('Y-m-d', $dte);
-            }
-            return $date->format('Y-m-d');
-        } catch (\ErrorException $e) {
+        $data = array('date' => $date);
+        $rules = array('date' => 'date_format:Y-m-d');
+        if (!$this->validator->validateDateFormat($data, $rules)) {
             $this->handleError(1, $this->error_message);
         }
-        
-        $this->handleError(1, $this->error_message);
+        else {
+            $dt = new \DateTime();
+            $date = $dt->createFromFormat('Y-m-d', $date);
+            return $date->format('Y-m-d');
+        }
     }
 
     public function setDate($dados, $key)
@@ -166,7 +162,8 @@ abstract class Model
         if (!isset($dados[$key]) || !is_string($dados[$key])) {
             $this->handleError(1, $this->error_message);
         }
-        return $this->dateValidator($dados[$key], false);
+        return returnDate($dados[$key]);
+        
     }
 
     public function setTimeStamp($dados, $key)
@@ -175,8 +172,7 @@ abstract class Model
         if (!isset($dados[$key]) || !is_int($dados[$key])) {
             $this->handleError(1, $this->error_message);
         }
-
-        return $this->dateValidator($dados[$key], true);
+        return returnDate($dados[$key]);
     }
 
     /**

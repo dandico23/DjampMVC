@@ -5,7 +5,6 @@ namespace Engine;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Container\ContainerInterface;
-
 use lib\Validator;
 
 abstract class Controller
@@ -15,6 +14,7 @@ abstract class Controller
     protected $flash;
     protected $state;
     protected $config;
+    protected $validator;
     
     public function __construct(ContainerInterface $container)
     {
@@ -49,7 +49,7 @@ abstract class Controller
         $this->flash = $this->container->get('flash');
         $this->state = $this->container->get('state');
         $this->config = $this->container->get('config');
-        $this->container->validator = new Validator();
+        $this->validator = new Validator();
     }
 
     public function setEnvironment()
