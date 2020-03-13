@@ -13,7 +13,7 @@ class Validator
      *              'email' => 'required|email',
      *              'age' => 'required|numeric',
      *              'expire_date' => 'date|after:tomorrow',
-     *              'punctuation' => 'digits_between:1,10|different:4,5',
+     *              'punctuation' => 'digits_between:1,10|not_in:4,5',
      *              'color' => 'string|in:red,green,blue',
      *              'phone' => 'size:8'
      *           ];
@@ -38,8 +38,6 @@ class Validator
      *                              The dates will be passed into the PHP strtotime function.
      *          - date_format:format - The field under validation must match the given format,
      *                                 function \DateTime::createFromFormat is used
-     *          - different:field1,field2 - The field under validation must have a different
-     *                                      value than given fields.
      *          - digits:value - The field under validation must be numeric and must have an exact length of value.
      *          - digits_between:min,max - The field under validation must have a length between
      *                              the given min and max (equal not included).
@@ -104,8 +102,6 @@ class Validator
             $to_return = $this->validateString($value, $field);
         } elseif ($rule == 'date') {
             $to_return = $this->validateDate($value, $field);
-        } elseif (strpos($rule, 'different') !== false) {
-            $to_return = $this->validateDifferent($rule, $value, $field);
         } elseif (strpos($rule, 'size') !== false) {
             $to_return = $this->validateSize($rule, $value, $field);
         } elseif (strpos($rule, 'regex') !== false) {
@@ -151,19 +147,6 @@ class Validator
         if (!preg_match($pattern, $value)) {
             $errMessage = "Field " . $field . " does not match pattern";
             return array("valid" => false, "invalid_message" => $errMessage);
-        }
-        return true;
-    }
-
-    public function validateDifferent($rule, $value, $field)
-    {
-        $fields = explode(":", $rule)[1];
-        $fields = explode(",", $fields);
-        foreach ($fields as $field) {
-            if ($field == $value) {
-                $errMessage = "Field " . $field . " not different from specified fields";
-                return array("valid" => false, "invalid_message" => $errMessage);
-            }
         }
         return true;
     }
