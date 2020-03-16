@@ -409,8 +409,12 @@ class MyPDO extends \PDO
         // get columns in the table
         try {
             if ($this->is_postgres) {
+                $split = explode('.', $table);
+                $scheme = $split[0];
+                $tabela = $split[1];
                 $this->sql = "SELECT column_name,data_type,identity_increment 
-                              FROM information_schema.columns WHERE table_name = '$table'";
+                              FROM INFORMATION_SCHEMA.COLUMNS
+                              where TABLE_SCHEMA = '$scheme' and TABLE_NAME = '$tabela'";
             } else {
                 $this->sql = 'SHOW COLUMNS FROM ' . $table;
             }
@@ -441,6 +445,7 @@ class MyPDO extends \PDO
 
     public function insert($table, $values, $bindings = array())
     {
+
         // filter values for table
         $values = $this->filter($values, $table);  # Commented because functions to get table columns not working
 
