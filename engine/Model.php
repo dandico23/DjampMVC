@@ -162,7 +162,7 @@ abstract class Model
         if (!isset($dados[$key]) || !is_string($dados[$key])) {
             $this->handleError(1, $this->error_message);
         }
-        return returnDate($dados[$key]);
+        return $this->returnDate($dados[$key]);
         
     }
 
@@ -172,7 +172,7 @@ abstract class Model
         if (!isset($dados[$key]) || !is_int($dados[$key])) {
             $this->handleError(1, $this->error_message);
         }
-        return returnDate($dados[$key]);
+        return $this->returnDate($dados[$key]);
     }
 
     /**
