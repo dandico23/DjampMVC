@@ -28,6 +28,7 @@ abstract class Controller
                 $router = $container->get('router');
                 $uri = \Slim\Http\Uri::createFromEnvironment(new \Slim\Http\Environment($_SERVER));
                 $view->addExtension(new \Slim\Views\TwigExtension($router, $uri));
+                $view->getEnvironment()->addGlobal("session", $_SESSION);
                 return $view;
             };
         }
