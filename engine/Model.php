@@ -146,7 +146,7 @@ abstract class Model
     {
         $data = array('date' => $date);
         $rules = array('date' => 'date_format:Y-m-d');
-        if (!$this->validator->validateDateFormat($data, $rules)) {
+        if (!$this->validator->validate($data, $rules)['valid']) {
             $this->handleError(1, $this->error_message);
         }
         else {
