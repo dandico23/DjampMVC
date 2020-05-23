@@ -330,7 +330,7 @@ class Validator
 
     public function validateAlphabetic($value, $field)
     {
-        if (!ctype_alpha($value)) {
+        if (!ctype_alpha(str_replace(' ', '', $value))) {
             $errMessage = "Field " . $field . " must contain only alphabetical characters";
             return array("valid" => false, "invalid_message" => $errMessage);
         }

@@ -64,10 +64,13 @@ abstract class Model
             $this->handleError(1, $this->error_message);
         }
 
-        # Add get parameters to the url
-        $parameters_str = http_build_query($parameters);
-        if ($parameters_str) {
-            $url .= "?" . $parameters_str;
+        // Checa se há a necessidade de adição de queries
+        if (isset($parameters) && !empty($parameters)) {
+            # Add get parameters to the url
+            $parameters_str = http_build_query($parameters);
+            if ($parameters_str) {
+                $url .= "?" . $parameters_str;
+            }
         }
 
         $curl  = curl_init();
@@ -82,7 +85,7 @@ abstract class Model
     }
 
     /**
-     * Executa uma requisição GET
+     * Executa uma requisição POST
      *
      * @param string url
      * @param array data

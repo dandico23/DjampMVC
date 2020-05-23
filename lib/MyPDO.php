@@ -516,9 +516,13 @@ class MyPDO extends \PDO
         $final_bindings = $buildResult[1];
 
         // handle the where clause and bindings
-        if (!empty($where)) {
-            $update_sql = $this->handleWhereClause($update_sql, $where, $final_bindings);
+        if (!isset($where[0])) {
+            throw new \PDOException('Where arguments do not exist in the table');
         }
+        $update_sql = $update_sql . ' WHERE ' . $where[0];
+        //if (!empty($where)) {
+            //$update_sql = $this->handleWhereClause($update_sql, $where, $final_bindings);
+        //}
         return $this->run($update_sql, $table, $final_bindings);
     }
 }
