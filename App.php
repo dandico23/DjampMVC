@@ -15,12 +15,16 @@ class App
         //sessão é obrigatória para mensagens flash
         if (!isset($_SESSION)) {
             session_start();
+            if (!isset($_SESSION['ghost'])) {
+                $_SESSION['ghost'] = rand(0, 50000);
+            }
         }
 
         $this->dir = str_replace("public", "", __DIR__);
         $configuration = [
             'settings' => [
                 'displayErrorDetails' => true,
+                'determineRouteBeforeAppMiddleware' => true
             ],
         ];
         $c = new \Slim\Container($configuration);
@@ -29,6 +33,9 @@ class App
 
         // Cria um container
         $container = $app->getContainer();
+        // configurações
+        $config = parse_ini_file($this->dir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.ini');
+        $container['config'] = $config;
 
         // Registra o componente View no Container
         if (empty($container['view'])) {
@@ -38,9 +45,13 @@ class App
                 ]);
                 // Instantiate and add Slim specific extension
                 $router = $container->get('router');
-                $uri = \Slim\Http\Uri::createFromEnvironment(new \Slim\Http\Environment($_SERVER));
+                $serverInfo = $_SERVER;
+                $uri = \Slim\Http\Uri::createFromEnvironment(new \Slim\Http\Environment($serverInfo));
                 $view->addExtension(new \Slim\Views\TwigExtension($router, $uri));
+                $version = json_decode(file_get_contents($this->dir . DIRECTORY_SEPARATOR . 'composer.json'));
                 $view->getEnvironment()->addGlobal("session", $_SESSION);
+                $view->getEnvironment()->addGlobal("version", $version->version);
+                
                 return $view;
             };
         }
@@ -49,31 +60,6 @@ class App
             $container['flash'] = function () {
                 return new \Slim\Flash\Messages();
             };
-        }
-        $config_str = 'config';
-        $container[$config_str] = parse_ini_file($this->dir . DIRECTORY_SEPARATOR . 'config'
-        . DIRECTORY_SEPARATOR . 'config.ini', true);
-
-
-        //Registra contanier com o ambiente atual
-        if (empty($container['ambiente'])) {
-            $mapStates = parse_ini_file($this->dir . DIRECTORY_SEPARATOR .  'config' . DIRECTORY_SEPARATOR . 'state.ini');
-            $config = parse_ini_file($this->dir . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.ini');
-
-            $request_uri = 'REQUEST_URI';
-            $state_str = 'state';
-            $develop_str = 'develop';
-            $config_str = 'config';
-            if (strpos($_SERVER[$request_uri], $mapStates['homolog']) !== false) {
-                $container[$state_str] = 'homolog';
-            } elseif (strpos($_SERVER[$request_uri], $mapStates[$develop_str]) !== false) {
-                $container[$state_str] = $develop_str;
-            } elseif (strpos($_SERVER[$request_uri], $mapStates['training']) !== false) {
-                $container[$state_str] = $develop_str;
-            } else {
-                $container[$state_str] = 'default';
-            }
-            $container[$config_str] = $config;
         }
 
         require($this->dir . DIRECTORY_SEPARATOR . 'App' .  DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'route.php');
@@ -86,5 +72,3 @@ class App
         return $this->app;
     }
 }
-
-
