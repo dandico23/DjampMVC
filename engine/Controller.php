@@ -18,10 +18,9 @@ abstract class Controller
     
     public function __construct(ContainerInterface $container)
     {
-        
+        $this->dir = str_replace("engine", "", __DIR__);
         $this->container = $container;
         $this->view = $this->container->get('view');
-        $this->state = $this->container->get('state');
         $this->config = $this->container->get('config');
         $this->validator = new Validator();
     }
@@ -29,6 +28,12 @@ abstract class Controller
     public function loadModel($model)
     {
         $class = '\\models\\' . $model . 'Model';
-        return new $class($this->state, $this->config, $this->container);
+        return new $class();
+    }
+
+    public function loadService($service)
+    {
+        $class = '\\services\\' . $service . 'Service';
+        return new $class($this->container);
     }
 }
