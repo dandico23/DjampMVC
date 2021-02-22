@@ -2,6 +2,8 @@
 
 namespace lib;
 
+use lib\CustomException;
+
 class Validator
 {
     /**
@@ -56,6 +58,10 @@ class Validator
      */
     public function validate($data, $rules)
     {
+        if (empty($data)) {
+            throw new CustomException('Parâmetros não fornecidos', 500);
+        }
+
         foreach ($rules as $field => $field_rules) {
             // Set as null if field does not exist in data array
             if (isset($data[$field])) {
@@ -66,9 +72,14 @@ class Validator
             
             $separeted_rules = explode("|", $field_rules);
             foreach ($separeted_rules as $rule) {
-                $result = $this->validateField($field, $value, $rule);
+                // Does not validate subsequent rules if field is optional (and is not set) or nullable (and equal to null)
+                if (($rule === 'optional' && !array_key_exists($field, $data)) || ($rule === 'nullable' && $value === null)) {
+                    break;
+                }
+
+                $result = $this->validateField($field, $value, $rule, $data);
                 if (!$result['valid']) {
-                    return $result;
+                    throw new CustomException($result[INVALID_MESSAGE], 422);
                 }
             }
         }
@@ -76,14 +87,14 @@ class Validator
         return $result;
     }
 
-    public function validateField($field, $value, $rule)
+    public function validateField($field, $value, $rule, $data)
     {
         $to_return = true;
 
         if ($rule == 'email') {
             $to_return = $this->validateEmail($value);
         } elseif ($rule == 'required') {
-            $to_return = $this->validateRequired($value, $field);
+            $to_return = $this->validateRequired($data, $field);
         } elseif ($rule == 'numeric') {
             $to_return = $this->validateNumeric($value, $field);
         } elseif ($rule == 'accepted') {
@@ -110,6 +121,10 @@ class Validator
             $to_return = $this->validateDateEquals($rule, $value, $field);
         } elseif (strpos($rule, 'date_format') !== false) {
             $to_return = $this->validateDateFormat($rule, $value, $field);
+        } elseif (strpos($rule, 'only_date_format') !== false) {
+            $to_return = $this->validateOnlyDateFormat($rule, $value, $field);
+        } elseif (strpos($rule, 'date_age_minor') !== false) {
+            $to_return = $this->validateAgeMinor($value, $field);
         } elseif (strpos($rule, 'after_or_equal') !== false) {
             $to_return = $this->validateAfterOrEqualDate($rule, $value, $field);
         } elseif (strpos($rule, 'after') !== false) {
@@ -161,7 +176,7 @@ class Validator
         }
 
         if (!$valid) {
-            $errMessage = "Field " . $field . " must have size " . $size;
+            $errMessage = "O campo " . $field . " deve ter o tamanho " . $size . ".";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -206,7 +221,7 @@ class Validator
         $length = strlen((string)$value);
 
         if (!($length > $min && $length < $max)) {
-            $errMessage = "Field " . $field . " length not between given values";
+            $errMessage = "O tamanho do campo " . $field . " não está dentro do esperado.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -219,8 +234,8 @@ class Validator
         $min = $split[0];
         $max = $split[1];
 
-        if (!($value > $min && $value < $max)) {
-            $errMessage = "Field " . $field . " not between given values";
+        if (!(strlen($value) > $min && strlen($value) < $max)) {
+            $errMessage = "O número de caracteres do campo " . $field . " deve ser entre " . $min . " e " . $max . ".";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -231,7 +246,7 @@ class Validator
         $valid = ($value === true || $value === false || $value === 1
         || $value === 0 || $value === '1' || $value === '0');
         if (!$valid) {
-            $errMessage = "Field " . $field . " must be a boolean";
+            $errMessage = "O campo " . $field . " precisa ser dado como verdadeiro / falso.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -240,7 +255,7 @@ class Validator
     public function validateInteger($value, $field)
     {
         if (!is_int($value)) {
-            $errMessage = "Field " . $field . " must be an integer";
+            $errMessage = "O campo " . $field . " precisa ser um número inteiro.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -249,7 +264,7 @@ class Validator
     public function validateString($value, $field)
     {
         if (!is_string($value)) {
-            $errMessage = "Field " . $field . " must be a string";
+            $errMessage = "O campo " . $field . " precisa ser uma frase (string).";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -267,25 +282,26 @@ class Validator
     public function validateNumeric($value, $field)
     {
         if (!(is_numeric($value))) {
-            $errMessage = "Field " . $field . " must be numeric";
-            return array("valid" => false, "invalid_message" => $errMessage);
-       }
-       return true;
-    }
-
-    public function validateEmail($value)
-    {
-        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-            $errMessage = "Invalid email format";
+            $errMessage = "O campo " . $field . " precisa ser um número.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
     }
 
-    public function validateRequired($value, $field)
+    public function validateEmail($value)
     {
-        if (!$value) {
-            $errMessage = "Field " . $field . " is required";
+        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            $errMessage = "Formato de email inválido.";
+            return array("valid" => false, "invalid_message" => $errMessage);
+        }
+        return true;
+    }
+
+    public function validateRequired($data, $field)
+    {
+        if (!array_key_exists($field, $data)) {
+            $errMessage = "O campo " . $field . " é obrigatório e precisa ser informado.";
+            
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -294,7 +310,18 @@ class Validator
     public function validateDate($value, $field)
     {
         if (!strtotime($value)) {
-            $errMessage = "Field " . $field . " must be a date";
+            $errMessage = "O campo " . $field . " precisa ser um tipo válido de data.";
+            return array("valid" => false, "invalid_message" => $errMessage);
+        }
+        return true;
+    }
+
+    public function validateAgeMinor($value, $field)
+    {
+        // 31556926 is the amount of seconds in a year
+        $age = floor((time() - strtotime($value)) / 31556926);
+        if ($age >= 18) {
+            $errMessage = "O campo " . $field . " informa usuário tem mais de 18 anos de idade.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -303,8 +330,27 @@ class Validator
     public function validateDateFormat($rule, $value, $field)
     {
         $format = explode(":", $rule)[1];
-        if (!(\DateTime::createFromFormat($format, $value))) {
-            $errMessage = "Field " . $field . " does not match given date format";
+        if (!(\DateTime::createFromFormat($format, $value)) && strlen($value) != 4) {
+            $errMessage = "O campo " . $field . " não apresenta um formato válido de data.";
+
+            return array("valid" => false, "invalid_message" => $errMessage);
+        } elseif (strlen($value) == 4) {// Creates DATE with only year
+            $value = \DateTime::createFromFormat("Y", $value);
+        } elseif (time() < strtotime($value)) {
+            $errMessage = "Não é possível inserir uma data superior à data atual.";
+
+            return array("valid" => false, "invalid_message" => $errMessage);
+        }
+        
+        return true;
+    }
+
+    public function validateOnlyDateFormat($rule, $value, $field)
+    {
+        $format = explode(":", $rule)[1];
+        if (!(\DateTime::createFromFormat($format, $value)) && strlen($value) != 4) {
+            $errMessage = "O campo " . $field . " não apresenta um formato válido de data.";
+
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -313,7 +359,7 @@ class Validator
     public function validateArray($value, $field)
     {
         if (!is_array($value)) {
-            $errMessage = "Field " . $field . " must be an array";
+            $errMessage = "O campo " . $field . " precisa ser um vetor de dados (array).";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -322,7 +368,7 @@ class Validator
     public function validateAlphaNumeric($value, $field)
     {
         if (!ctype_alnum($value)) {
-            $errMessage = "Field " . $field . " must contain only alphanumerical characters";
+            $errMessage = "O campo " . $field . " deve conter apenas caracteres alfa-numéricos.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -330,12 +376,14 @@ class Validator
 
     public function validateAlphabetic($value, $field)
     {
-        if (!ctype_alpha(str_replace(' ', '', $value))) {
-            $errMessage = "Field " . $field . " must contain only alphabetical characters";
+        $reg = '/^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+$/';
+        if (!preg_match($reg, $value)) {
+            $errMessage = "O campo " . $field . " deve conter apenas caracteres alfabéticos.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
     }
+
 
     public function validateNotIn($rule, $value, $field)
     {
@@ -343,7 +391,7 @@ class Validator
         $not_allowed_values = explode(",", $not_allowed_values);
 
         if (in_array($value, $not_allowed_values)) {
-            $errMessage = "Field " . $field . " value not accepted";
+            $errMessage = "O campo " . $field . " não está contido nos valores aceitos.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
@@ -355,7 +403,7 @@ class Validator
         $accepted_values = explode(",", $accepted_values);
 
         if (!in_array($value, $accepted_values)) {
-            $errMessage = "Field " . $field . " value not accepted";
+            $errMessage = "O valor do campo " . $field . " não é aceito.";
             return array("valid" => false, "invalid_message" => $errMessage);
         }
         return true;
