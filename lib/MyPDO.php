@@ -202,6 +202,35 @@ class MyPDO extends \PDO
     }
 
     /**
+     * Realiza um select simples buscando como default todos os registros de uma tabela
+     *
+     * @param string $table_name - Nome da tabela
+     * @param array $columns - Array contendo o nome das colunas que serão apresentadas
+     * @param int $limit - Limite de resultados
+     *
+     * @return array - Results
+     */
+    public function simpleSelect(string $table_name, array $columns = array(), int $limit = 0)
+    {
+
+        $query = "SELECT * FROM " . $table_name;
+        $binding = array();
+        $table = PDOHelper::getTableFromQuery($query);
+        if ($columns) {
+            $query = "SELECT " . implode(',', $columns) . " FROM " . $table_name;
+        }
+        if ($limit > 0) {
+            $query = $query . " LIMIT " . $limit;
+        }
+
+        // prepare the statement / bind and execute
+        if ($this->customPrepare($query, $table) && $this->execute($binding)) {
+            return $this->statement->fetchAll(\PDO::FETCH_ASSOC);
+        }
+        return false;
+    }
+
+    /**
      * Return the total number of pages given the number of elements per page
      *
      * @param string $table - table name
@@ -506,23 +535,59 @@ class MyPDO extends \PDO
         return $sql;
     }
 
-    public function update($table, $values, $where = array(), $bindings = array())
+    /**
+     * Monta a clausula WHERE apartir de um array associativo
+     * Sempre utiliza o comparativo '='
+     *
+     * @param array $where - Array associativo com o nome do campo e a condição
+     *
+     * @return array - Contem a query da clausula where e os bindings
+     */
+    public function handleWhereOnUpdate(array $where)
     {
-        // Build the SQL:
-        $update_sql = 'UPDATE ' . $table . ' SET ';
+        $count = 0;
+        $query = ' WHERE ';
+        $bind = array();
+        foreach ($where as $value => $condition) {
+            $bind[":" . $value] = $condition;
+            $query = $query . $value . ' = :' . $value;
+            if ($count != count($where) - 1) {
+                $query = $query . ' AND ';
+            }
+            $count = $count + 1;
+        }
+        return array($query, $bind);
+    }
 
-        $buildResult = $this->buildSQL($update_sql, $table, $values, $bindings);
+    /**
+     * Realiza um update na tabela escolhida
+     * Sempre utiliza o comparativo '='
+     *
+     * @param string $table - Tablea no qual ira realizar a operação
+     * @param array $values - Array associativo contendo campo e valor a serem atualizados
+     * @param array $where - Array associativo com o nome do campo e a condição
+     *
+     * @return [type]
+     */
+    public function update(string $table, array $values, array $where)
+    {
+        $update_sql = 'UPDATE ' . $table . ' SET ';
+        $buildResult = $this->buildSQL($update_sql, $table, $values, array());
         $update_sql = $buildResult[0];
         $final_bindings = $buildResult[1];
+        $bind  = array();
 
-        // handle the where clause and bindings
-        if (!isset($where[0])) {
-            throw new \PDOException('Where arguments do not exist in the table');
+        if (!empty($where)) {
+            $handleWhere = $this->handleWhereOnUpdate($where);
+            $update_sql = $update_sql . $handleWhere[0];
+            $bind = $handleWhere[1];
+        } else {
+            // Para evitar um update na tabela toda
+            throw new \PDOException('Ao menos um argumento WHERE é necessario');
         }
-        $update_sql = $update_sql . ' WHERE ' . $where[0];
-        //if (!empty($where)) {
-            //$update_sql = $this->handleWhereClause($update_sql, $where, $final_bindings);
-        //}
+
+        $final_bindings = $final_bindings + $bind;
+
         return $this->run($update_sql, $table, $final_bindings);
     }
 }

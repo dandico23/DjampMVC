@@ -18,13 +18,14 @@ class PDOHelper extends MyPDO
         $msg .= "\n" . '<style type="text/css">' . "\n" . $css . "\n" . '</style>';
         $msg .= "\n" . '<div class="debug">' . "\n\t" . '<h3>' . __METHOD__ . '</h3>';
         foreach ($error as $key => $value) {
-            $msg .= "\n\t" . '<label>' . $key . ':</label>' . $value;
+            if ($key != 'Args' && $key != 'File') {
+                $msg .= "\n\t" . '<label>' . $key . ':</label>' . $value;
+            }
         }
         $msg .= "\n" . '</div>';
-
         // customize error handling based on environment:
-        if ($env_state == 'Default') {  # Em produção
-            // do nothing
+        if ($env_state == 'default') {  # Em produção
+            echo $msg;
         } else {
             echo $msg;
         }
