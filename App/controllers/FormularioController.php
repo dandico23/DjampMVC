@@ -15,7 +15,7 @@ class FormularioController extends \Engine\Controller
     {
         $dadosForm = $request->getParsedBody();
         $atividadesModel = $this->loadModel('Formulario');
-        $Atividades = $atividadesModel->getAtividades();
+        $atividades = $atividadesModel->getAtividades();
         return $this->view->render($response, 'formulario/sucesso.html', $dadosForm);
     }
 }

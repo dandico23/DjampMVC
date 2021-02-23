@@ -2,16 +2,30 @@
 
 namespace Controller;
 
+use lib\CustomException;
+
 class ExamplesController extends \Engine\Controller
 {
 
+    /**
+     * More realistic example
+     *
+     * @param mixed $request
+     * @param mixed $response
+     * @param mixed $args
+     *
+     * @return [type]
+     */
     public function insertMySql($request, $response, $args)
     {
-        $examplesModel = $this->loadModel('Examples');
-        $insert_values = array("column1" => "value1", "column2" => "value2", "column3" => 4);
-        $result = $examplesModel->insertIntoTestTable($insert_values);
-        var_dump("Inserted row:");
-        var_dump($result);
+        try {
+            $body = $request->getParsedBody();
+            $examplesService = $this->loadService('Examples');
+            $result = $examplesService->insertMySql($body);
+            return $response->withJSON($result, 200);
+        } catch (CustomException | Exception $e) {
+            return $response->withJson($e->getCompleteExceptionMessage(), $e->getCode());
+        }
     }
 
     public function selectMySql($request, $response, $args)

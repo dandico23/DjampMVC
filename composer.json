@@ -34,8 +34,10 @@
         "psr-4": {
             "Controller\\": "App\\controllers",
             "models\\": "App\\models",
+            "services\\": "App\\services",
             "lib\\": "lib",
-            "Engine\\": "engine"
+            "Engine\\": "engine",
+            "Djamp\\":""
         }
     },
     "autoload-dev": {
